@@ -66,4 +66,4 @@ Then build from source as shown above.
 ## Credits
 
 These programs were written by Dan Stahlke of the Geographic Information Network of Alaska.
-Send questions or comments to [dan@stahlke.org](mailto:dan@stahlke.org).
+Send questions or comments to [guoruiuser@163.com](mailto:guoruiuser@163.com).

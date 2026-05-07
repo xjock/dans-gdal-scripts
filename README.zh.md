@@ -65,4 +65,4 @@ brew install gdal boost cmake
 ## 致谢
 
 本工具集由阿拉斯加地理信息网络（GINA）的 Dan Stahlke 编写。
-如有问题或建议，请发送至 [dan@stahlke.org](mailto:dan@stahlke.org)。
+如有问题或建议，请发送至 [guoruiuser@163.com](mailto:guoruiuser@163.com)。
