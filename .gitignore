@@ -1,24 +1,18 @@
-# autoconf droppings
-Makefile
-Makefile.in
-aclocal.m4
-autom4te.cache/
-config.h
-config.h.in
-config.h.in~
-config.log
-config.status
-configure
-depcomp
-install-sh
-missing
-src/.deps/
-src/Makefile
-src/Makefile.in
-stamp-h1
+# cmake build directories and files
+build*/
+cmake-build-*/
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+CTestTestfile.cmake
+Makefile.cmake
 
 # built files
 *.o
+*.a
+*.so
+*.dylib
+*.dll
 src/gdal_contrast_stretch
 src/gdal_dem2rgb
 src/gdal_get_projected_bounds
@@ -31,3 +25,12 @@ src/gdal_raw2geotiff
 src/gdal_trace_outline
 src/gdal_wkt_to_mask
 dans-gdal-scripts-*.tar.gz
+
+# editor / IDE
+.vscode/
+.idea/
+*.swp
+*~
+
+# claude code workspace
+.claude/

@@ -1,0 +1,25 @@
+#ifndef DANGDAL_CONFIG_H
+#define DANGDAL_CONFIG_H
+
+#cmakedefine HAVE_STDINT_H 1
+#cmakedefine HAVE_INTTYPES_H 1
+#cmakedefine HAVE_STDLIB_H 1
+#cmakedefine HAVE_STRING_H 1
+
+#cmakedefine HAVE_GDAL_H 1
+#cmakedefine HAVE_CPL_CONV_H 1
+#cmakedefine HAVE_CPL_PORT_H 1
+#cmakedefine HAVE_CPL_STRING_H 1
+#cmakedefine HAVE_OGR_API_H 1
+#cmakedefine HAVE_OGR_SPATIALREF_H 1
+#cmakedefine HAVE_OGRSF_FRMTS_H 1
+
+#define PACKAGE "@PROJECT_NAME@"
+#define PACKAGE_NAME "@PROJECT_NAME@"
+#define PACKAGE_VERSION "@PROJECT_VERSION@"
+#define PACKAGE_STRING "@PROJECT_NAME@ @PROJECT_VERSION@"
+#define PACKAGE_TARNAME "@PROJECT_NAME@"
+#define PACKAGE_BUGREPORT "dan@stahlke.org"
+#define VERSION "@PROJECT_VERSION@"
+
+#endif
