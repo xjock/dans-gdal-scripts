@@ -338,7 +338,8 @@ FeatureBitmap *FeatureBitmap::from_raster(
 			GDALTermProgress(progress, NULL, NULL);
 
 			for(size_t band_idx=0; band_idx<bands.size(); band_idx++) {
-				GDALReadBlock(bands[band_idx], block_x, block_y, &band_buf[band_idx][0]);
+				if(GDALReadBlock(bands[band_idx], block_x, block_y, &band_buf[band_idx][0]) != CE_None)
+					fatal_error("GDALReadBlock failed");
 			}
 			if(!ndv_def.empty()) {
 				ndv_def.getNdvMask(band_buf, datatypes, &ndv_mask[0], blocksize_xy);

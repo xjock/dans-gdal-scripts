@@ -449,28 +449,22 @@ int main(int argc, char **argv) {
 			if(do_invert)  mask.invert();
 			if(do_erosion) mask.erode();
 
+			if(!containing_options.empty()) {
+				// We need to trace donuts even if not outputting them, in order to
+				// see if the polygons satisfy the containment options.
+				trace_no_donuts = 0;
+			} else {
+				trace_no_donuts = output_no_donuts;
+				// If taking only the major ring, no holes are needed.
+				trace_no_donuts |= major_ring_only;
+			}
+			// If we are only taking the largest ring, and don't need to compute
+			// containments, then skip donuts for speed.
+			if(major_ring_only && containing_options.empty()) {
+				trace_no_donuts = 1;
+			}
+
 			feature_poly = trace_mask(mask, georef.w, georef.h, min_ring_area, trace_no_donuts);
-		}
-
-		if(!containing_options.empty()) {
-			// We need to trace donuts even if not outputting them, in order to
-			// see if the polygons satisfy the containment options.  Ideally
-			// the user should be able to specify which happens first, hole
-			// removal or containment options.  Maybe there needs to be a
-			// rudimentary scripting language?  Or maybe just process the
-			// options in the order they are specified on the command line.
-
-			// Note: in this case, donuts must be removed later on!
-			trace_no_donuts = 0;
-		} else {
-			trace_no_donuts = output_no_donuts;
-			// If taking only the major ring, no holes are needed.
-			trace_no_donuts |= major_ring_only;
-		}
-		// If we are only taking the largest ring, and don't need to compute
-		// containments, then skip donuts for speed.
-		if(major_ring_only && containing_options.empty()) {
-			trace_no_donuts = 1;
 		}
 
 		if(VERBOSE) {
@@ -569,6 +563,7 @@ int main(int argc, char **argv) {
 							char *wkt_out;
 							OGR_G_ExportToWkt(ogr_geom, &wkt_out);
 							fprintf(go.wkt_fh, "%s\n", wkt_out);
+							CPLFree(wkt_out);
 						}
 						if(go.wkb_fh) {
 							size_t wkb_size = OGR_G_WkbSize(ogr_geom);
@@ -586,7 +581,8 @@ int main(int argc, char **argv) {
 							}
 
 							OGR_F_SetGeometryDirectly(ogr_feat, ogr_geom); // assumes ownership of geom
-							OGR_L_CreateFeature(go.ogr_layer, ogr_feat);
+							if(OGR_L_CreateFeature(go.ogr_layer, ogr_feat) != OGRERR_NONE)
+								fatal_error("OGR_L_CreateFeature failed");
 							OGR_F_Destroy(ogr_feat);
 						} else {
 							OGR_G_DestroyGeometry(ogr_geom);
@@ -610,7 +606,10 @@ int main(int argc, char **argv) {
 		if(go.ogr_ds) OGR_DS_Destroy(go.ogr_ds);
 	}
 
-	if(dbuf) dbuf->writePlot(debug_report);
+	if(dbuf) {
+		dbuf->writePlot(debug_report);
+		delete dbuf;
+	}
 
 	if(do_geom_output) {
 		if(num_shapes_written) printf("Wrote %d shapes.\n", num_shapes_written);

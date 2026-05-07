@@ -225,7 +225,8 @@ int main(int argc, char *argv[]) {
 		if(endian_mismatch) {
 			GDALSwapWords(&linebuf[0], bytes_per_pixel, w, 0);
 		}
-		GDALRasterIO(dst_band, GF_Write, 0, row, w, 1, &linebuf[0], w, 1, gdal_dt, 0, 0);
+		if(GDALRasterIO(dst_band, GF_Write, 0, row, w, 1, &linebuf[0], w, 1, gdal_dt, 0, 0) != CE_None)
+			fatal_error("GDALRasterIO write failed");
 	}
 
 	//////////// shutdown

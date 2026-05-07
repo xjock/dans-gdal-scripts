@@ -44,8 +44,7 @@ struct Binning {
 	{ }
 
 	int to_bin(double v) const {
-		if(std::isinf(v) == -1) return 0;
-		if(std::isinf(v) ==  1) return nbins-1;
+		if(std::isinf(v)) return v < 0 ? 0 : nbins-1;
 		double bin_dbl = round((v-offset)/scale);
 		if(std::isnan(bin_dbl)) fatal_error("nan in to_bin");
 		if(bin_dbl < 0) return 0;
@@ -434,8 +433,9 @@ int main(int argc, char *argv[]) {
 			GDALTermProgress(progress, NULL, NULL);
 
 			for(size_t band_idx=0; band_idx<dst_band_count; band_idx++) {
-				GDALRasterIO(src_bands[band_idx], GF_Read, boff_x, boff_y, bsize_x, bsize_y, 
-					&buf_in[band_idx][0], bsize_x, bsize_y, GDT_Float64, 0, 0);
+				if(GDALRasterIO(src_bands[band_idx], GF_Read, boff_x, boff_y, bsize_x, bsize_y,
+					&buf_in[band_idx][0], bsize_x, bsize_y, GDT_Float64, 0, 0) != CE_None)
+					fatal_error("GDALRasterIO read failed");
 			}
 
 			ndv_def.getNdvMask(buf_in, &ndv_mask[0], block_len);
@@ -479,8 +479,9 @@ int main(int argc, char *argv[]) {
 					}
 				}
 
-				GDALRasterIO(dst_bands[band_idx], GF_Write, boff_x, boff_y, bsize_x, bsize_y, 
-					&buf_out[band_idx][0], bsize_x, bsize_y, GDT_Byte, 0, 0);
+				if(GDALRasterIO(dst_bands[band_idx], GF_Write, boff_x, boff_y, bsize_x, bsize_y,
+					&buf_out[band_idx][0], bsize_x, bsize_y, GDT_Byte, 0, 0) != CE_None)
+					fatal_error("GDALRasterIO write failed");
 			} // band
 		} // block x
 	} // block y
@@ -530,8 +531,9 @@ std::vector<std::pair<double, double> > compute_minmax(
 			GDALTermProgress(progress, NULL, NULL);
 
 			for(size_t band_idx=0; band_idx<band_count; band_idx++) {
-				GDALRasterIO(src_bands[band_idx], GF_Read, boff_x, boff_y, bsize_x, bsize_y, 
-					&buf_in[band_idx][0], bsize_x, bsize_y, GDT_Float64, 0, 0);
+				if(GDALRasterIO(src_bands[band_idx], GF_Read, boff_x, boff_y, bsize_x, bsize_y,
+					&buf_in[band_idx][0], bsize_x, bsize_y, GDT_Float64, 0, 0) != CE_None)
+					fatal_error("GDALRasterIO read failed");
 			}
 
 			ndv_def.getNdvMask(buf_in, &ndv_mask[0], block_len);
@@ -603,8 +605,9 @@ std::vector<Histogram> compute_histogram(
 			GDALTermProgress(progress, NULL, NULL);
 
 			for(size_t band_idx=0; band_idx<band_count; band_idx++) {
-				GDALRasterIO(src_bands[band_idx], GF_Read, boff_x, boff_y, bsize_x, bsize_y, 
-					&buf_in[band_idx][0], bsize_x, bsize_y, GDT_Float64, 0, 0);
+				if(GDALRasterIO(src_bands[band_idx], GF_Read, boff_x, boff_y, bsize_x, bsize_y,
+					&buf_in[band_idx][0], bsize_x, bsize_y, GDT_Float64, 0, 0) != CE_None)
+					fatal_error("GDALRasterIO read failed");
 			}
 
 			ndv_def.getNdvMask(buf_in, &ndv_mask[0], block_len);

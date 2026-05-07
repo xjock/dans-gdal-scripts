@@ -54,7 +54,25 @@ GDALCONFIG=$with_gdal
 AC_SUBST(GDALCFLAGS)
 GDALCFLAGS=`${GDALCONFIG} --cflags`
 AC_SUBST(GDALLIBS)
-GDALLIBS=`${GDALCONFIG} --libs`
+GDAL_RAW_LIBS=`${GDALCONFIG} --libs`
+case "$GDAL_RAW_LIBS" in
+	*.la*)
+		# Some libtool-based GDAL builds emit a .la script from `gdal-config --libs`
+		# instead of the usual `-L<dir> -lgdal` flags. Linkers don't understand .la
+		# files, so pull the install dir out of the .la and rebuild proper flags.
+		# Append --dep-libs to recover the transitive deps GDAL was built against.
+		# --no-as-needed avoids dropping shared libs needed by static archives in
+		# dep-libs (e.g. Kakadu's libkdu_aux.a referencing libkdu_v77R.so).
+		GDAL_LA_FILE=`echo "$GDAL_RAW_LIBS" | tr ' ' '\n' | grep '\.la$' | head -n 1`
+		GDAL_LIBDIR=`grep '^libdir=' "$GDAL_LA_FILE" | sed -e "s/^libdir='//" -e "s/'\$//"`
+		GDAL_DEP_LIBS=`${GDALCONFIG} --dep-libs`
+		GDALLIBS="-Wl,--no-as-needed -L${GDAL_LIBDIR} -lgdal ${GDAL_DEP_LIBS}"
+		AC_MSG_NOTICE([gdal-config returned libtool .la; using -L${GDAL_LIBDIR} -lgdal plus --dep-libs])
+		;;
+	*)
+		GDALLIBS="${GDAL_RAW_LIBS}"
+		;;
+esac
 
 # Check for GDAL header files
 SAVE_CPPFLAGS="${CPPFLAGS}"

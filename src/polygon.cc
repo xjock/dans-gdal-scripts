@@ -865,18 +865,18 @@ Ring Ring::debug_load_binary(FILE *fh) {
 	Ring ret;
 
 	uint32_t magic;
-	fread(&magic, sizeof(magic), 1, fh);
+	if(fread(&magic, sizeof(magic), 1, fh) != 1) fatal_error("short read of ring magic");
 	if(magic != 0x676e6952) {
 		fatal_error("couldn't read ring: bad magic number");
 	}
 	uint8_t is_hole_byte;
-	fread(&is_hole_byte, sizeof(is_hole_byte), 1, fh);
+	if(fread(&is_hole_byte, sizeof(is_hole_byte), 1, fh) != 1) fatal_error("short read of is_hole");
 	ret.is_hole = is_hole_byte;
-	fread(&ret.parent_id, sizeof(ret.parent_id), 1, fh);
+	if(fread(&ret.parent_id, sizeof(ret.parent_id), 1, fh) != 1) fatal_error("short read of parent_id");
 	size_t npts;
-	fread(&npts, sizeof(npts), 1, fh);
+	if(fread(&npts, sizeof(npts), 1, fh) != 1) fatal_error("short read of npts");
 	ret.pts.resize(npts);
-	fread(&ret.pts[0], sizeof(Vertex), npts, fh);
+	if(fread(&ret.pts[0], sizeof(Vertex), npts, fh) != npts) fatal_error("short read of pts");
 
 	return ret;
 }
@@ -895,12 +895,12 @@ Mpoly Mpoly::debug_load_binary(FILE *fh) {
 	Mpoly ret;
 
 	uint32_t magic;
-	fread(&magic, sizeof(magic), 1, fh);
+	if(fread(&magic, sizeof(magic), 1, fh) != 1) fatal_error("short read of mpoly magic");
 	if(magic != 0x796c704d) {
 		fatal_error("couldn't read mply: bad magic number");
 	}
 	size_t nrings;
-	fread(&nrings, sizeof(nrings), 1, fh);
+	if(fread(&nrings, sizeof(nrings), 1, fh) != 1) fatal_error("short read of nrings");
 	for(size_t i=0; i<nrings; i++) {
 		ret.rings.push_back(Ring::debug_load_binary(fh));
 	}

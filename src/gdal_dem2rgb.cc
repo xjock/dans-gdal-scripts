@@ -384,9 +384,12 @@ int main(int argc, char *argv[]) {
 	for(size_t row=0; row<h; row++) {
 		GDALTermProgress((double)row / (double)h, NULL, NULL);
 		if(row == 0) {
-			GDALRasterIO(src_band, GF_Read, 0, 0, w, 1, &inbuf_prev[0], w, 1, GDT_Float64, 0, 0);
-			GDALRasterIO(src_band, GF_Read, 0, 0, w, 1, &inbuf_this[0], w, 1, GDT_Float64, 0, 0);
-			GDALRasterIO(src_band, GF_Read, 0, 1, w, 1, &inbuf_next[0], w, 1, GDT_Float64, 0, 0);
+			if(GDALRasterIO(src_band, GF_Read, 0, 0, w, 1, &inbuf_prev[0], w, 1, GDT_Float64, 0, 0) != CE_None)
+				fatal_error("GDALRasterIO read failed");
+			if(GDALRasterIO(src_band, GF_Read, 0, 0, w, 1, &inbuf_this[0], w, 1, GDT_Float64, 0, 0) != CE_None)
+				fatal_error("GDALRasterIO read failed");
+			if(GDALRasterIO(src_band, GF_Read, 0, 1, w, 1, &inbuf_next[0], w, 1, GDT_Float64, 0, 0) != CE_None)
+				fatal_error("GDALRasterIO read failed");
 			ndv_def.getNdvMask(&inbuf_prev[0], GDT_Float64, &inbuf_ndv_prev[0], w);
 			ndv_def.getNdvMask(&inbuf_this[0], GDT_Float64, &inbuf_ndv_this[0], w);
 			ndv_def.getNdvMask(&inbuf_next[0], GDT_Float64, &inbuf_ndv_next[0], w);
@@ -407,13 +410,15 @@ int main(int argc, char *argv[]) {
 			std::swap(inbuf_ndv_next, swapc);
 
 			int read_row = (row == h-1) ? row : row+1;
-			GDALRasterIO(src_band, GF_Read, 0, read_row, w, 1, &inbuf_next[0], w, 1, GDT_Float64, 0, 0);
+			if(GDALRasterIO(src_band, GF_Read, 0, read_row, w, 1, &inbuf_next[0], w, 1, GDT_Float64, 0, 0) != CE_None)
+				fatal_error("GDALRasterIO read failed");
 			ndv_def.getNdvMask(&inbuf_next[0], GDT_Float64, &inbuf_ndv_next[0], w);
 			scale_values(&inbuf_next[0], w, src_scale, src_offset);
 		}
 		if(!tex_bands.empty()) {
 			for(int i=0; i<out_numbands; i++) {
-				GDALRasterIO(tex_bands[i], GF_Read, 0, row, w, 1, &outbuf[i][0], w, 1, GDT_Byte, 0, 0);
+				if(GDALRasterIO(tex_bands[i], GF_Read, 0, row, w, 1, &outbuf[i][0], w, 1, GDT_Byte, 0, 0) != CE_None)
+					fatal_error("GDALRasterIO read failed");
 			}
 		}
 
@@ -565,7 +570,8 @@ int main(int argc, char *argv[]) {
 			}
 		}
 		for(int i=0; i<out_numbands; i++) {
-			GDALRasterIO(dst_band[i], GF_Write, 0, row, w, 1, &outbuf[i][0], w, 1, GDT_Byte, 0, 0);
+			if(GDALRasterIO(dst_band[i], GF_Write, 0, row, w, 1, &outbuf[i][0], w, 1, GDT_Byte, 0, 0) != CE_None)
+				fatal_error("GDALRasterIO write failed");
 		}
 	}
 

@@ -233,7 +233,8 @@ int main(int argc, char *argv[]) {
 	for(size_t row=0; row<h; row++) {
 		GDALTermProgress((double)row/h, NULL, NULL);
 
-		GDALRasterIO(pan_band, GF_Read, 0, row, w, 1, &pan_buf[0], w, 1, GDT_Float64, 0, 0);
+		if(GDALRasterIO(pan_band, GF_Read, 0, row, w, 1, &pan_buf[0], w, 1, GDT_Float64, 0, 0) != CE_None)
+			fatal_error("GDALRasterIO read failed");
 		for(size_t band_idx=0; band_idx<lum_band_count; band_idx++) {
 			readLineScaled(lum_bands[band_idx], row, &lum_buf[band_idx][0]);
 		}
@@ -280,8 +281,9 @@ int main(int argc, char *argv[]) {
 				}
 			}
 
-			GDALRasterIO(dst_bands[band_idx], GF_Write, 0, row, w, 1,
-				&out_buf[0], w, 1, GDT_Float64, 0, 0);
+			if(GDALRasterIO(dst_bands[band_idx], GF_Write, 0, row, w, 1,
+				&out_buf[0], w, 1, GDT_Float64, 0, 0) != CE_None)
+				fatal_error("GDALRasterIO write failed");
 		}
 	} // row
 
@@ -393,7 +395,8 @@ void readLineScaled1D(ScaledBand &sb, int row, double *hires_buf) {
 			hires_buf[col] = 0;
 		}
 	} else {
-		GDALRasterIO(sb.band, GF_Read, 0, row, sb.lo_w, 1, &lores_buf[0], sb.lo_w, 1, GDT_Float64, 0, 0);
+		if(GDALRasterIO(sb.band, GF_Read, 0, row, sb.lo_w, 1, &lores_buf[0], sb.lo_w, 1, GDT_Float64, 0, 0) != CE_None)
+			fatal_error("GDALRasterIO read failed");
 		for(int mx=0; mx<sb.oversample; mx++) {
 			double *kernel = &sb.kernel_x[mx][0];
 			for(int x0=0; ; x0++) {

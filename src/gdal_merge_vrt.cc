@@ -27,6 +27,7 @@ This code was developed by Dan Stahlke for the Geographic Information Network of
 
 
 #include <vector>
+#include <cstdlib>
 
 #include "common.h"
 
@@ -97,26 +98,46 @@ int main(int argc, char *argv[]) {
 	GDALDatasetH dst_ds = GDALCreateCopy(dst_driver, dst_fn.c_str(), src_ds[0], 0, NULL, NULL, NULL);
 	if(!dst_ds) fatal_error("could not create output");
 
-	std::vector<GDALDatasetH> to_close;
 	int band_idx = GDALGetRasterCount(src_ds[0]);
 	for(size_t ds_idx=1; ds_idx<src_fn.size(); ds_idx++) {
 		int nb = GDALGetRasterCount(src_ds[ds_idx]);
 
-		GDALDatasetH src_vrt_ds = GDALCreateCopy(dst_driver, "", src_ds[ds_idx], 0, NULL, NULL, NULL);
-		to_close.push_back(src_vrt_ds);
-		if(!src_vrt_ds) fatal_error("could not create VRT copy");
+		// Resolve to an absolute path so the SimpleSource XML resolves correctly
+		// regardless of where the output VRT lives.
+		char *abs_path = realpath(src_fn[ds_idx].c_str(), NULL);
+		if(!abs_path) fatal_error("could not resolve absolute path of %s", src_fn[ds_idx].c_str());
+		std::string src_abs = abs_path;
+		free(abs_path);
 
 		for(int i=0; i<nb; i++) {
-			GDALRasterBandH src_band = GDALGetRasterBand(src_vrt_ds, i+1);
-			if(!src_band) fatal_error("could not get src_band");
+			GDALRasterBandH ref_band = GDALGetRasterBand(src_ds[ds_idx], i+1);
+			if(!ref_band) fatal_error("could not get src band");
 
-			GDALAddBand(dst_ds, GDALGetRasterDataType(src_band), NULL);
+			GDALDataType dt = GDALGetRasterDataType(ref_band);
+			int blk_x, blk_y;
+			GDALGetBlockSize(ref_band, &blk_x, &blk_y);
+
+			if(GDALAddBand(dst_ds, dt, NULL) != CE_None)
+				fatal_error("GDALAddBand failed");
 
 			GDALRasterBandH dst_band = GDALGetRasterBand(dst_ds, band_idx+1);
 			if(!dst_band) fatal_error("could not get dst_band");
 
-			char **metadata = GDALGetMetadata(src_band, "vrt_sources");
-			GDALSetMetadata(dst_band, metadata, "new_vrt_sources");
+			char xml[8192];
+			snprintf(xml, sizeof(xml),
+				"<SimpleSource>"
+				"<SourceFilename relativeToVRT=\"0\">%s</SourceFilename>"
+				"<SourceBand>%d</SourceBand>"
+				"<SourceProperties RasterXSize=\"%zd\" RasterYSize=\"%zd\" DataType=\"%s\" BlockXSize=\"%d\" BlockYSize=\"%d\" />"
+				"<SrcRect xOff=\"0\" yOff=\"0\" xSize=\"%zd\" ySize=\"%zd\" />"
+				"<DstRect xOff=\"0\" yOff=\"0\" xSize=\"%zd\" ySize=\"%zd\" />"
+				"</SimpleSource>",
+				src_abs.c_str(), i+1,
+				w, h, GDALGetDataTypeName(dt), blk_x, blk_y,
+				w, h, w, h);
+
+			if(GDALSetMetadataItem(dst_band, "source_0", xml, "new_vrt_sources") != CE_None)
+				fatal_error("GDALSetMetadataItem failed");
 
 			band_idx++;
 		}
@@ -124,10 +145,6 @@ int main(int argc, char *argv[]) {
 
 	GDALClose(dst_ds);
 
-	// These must be closed *after* dst_ds.
-	for(size_t i=0; i<to_close.size(); i++) {
-		GDALClose(to_close[i]);
-	}
 	for(size_t i=0; i<src_ds.size(); i++) {
 		GDALClose(src_ds[i]);
 	}
