@@ -49,20 +49,6 @@ cd build
 ctest --output-on-failure
 ```
 
-## Debian / Ubuntu
-
-```bash
-apt-get install dans-gdal-scripts
-```
-
-## macOS (Homebrew)
-
-```bash
-brew install gdal boost cmake
-```
-
-Then build from source as shown above.
-
 ## Credits
 
 These programs were written by Dan Stahlke of the Geographic Information Network of Alaska.

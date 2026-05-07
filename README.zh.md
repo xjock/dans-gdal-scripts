@@ -48,20 +48,6 @@ cd build
 ctest --output-on-failure
 ```
 
-## Debian / Ubuntu
-
-```bash
-apt-get install dans-gdal-scripts
-```
-
-## macOS (Homebrew)
-
-```bash
-brew install gdal boost cmake
-```
-
-然后从源码构建即可。
-
 ## 致谢
 
 本工具集由阿拉斯加地理信息网络（GINA）的 Dan Stahlke 编写。
